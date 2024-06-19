@@ -1,23 +1,26 @@
+import csv 
+
 class ScholarshipApplication:
-    def __init__(self, nama, umur, ipk):
+    def __init__(self, nama, umur, ipk, npm):
         self.nama = nama
         self.umur = umur
         self.ipk = ipk
-
+        self.npm = npm
     def __repr__(self):
-        return f"Nama: {self.nama}, Umur: {self.umur}, IPK: {self.ipk}"
+        return f"Nama: {self.nama}, Umur: {self.umur}, IPK: {self.ipk}, NPM: {self.npm}"
 
 class ScholarshipManager:
     def __init__(self):
         self.applications = []
 
-    def create_application(self, nama, umur, ipk):
-        if any(app.nama == nama for app in self.applications):
-            print(f"Pendaftar dengan nama {nama} sudah ada.")
-            return
-        application = ScholarshipApplication(nama, umur, ipk)
+    def create_application(self, nama, umur, ipk, npm):
+        application = ScholarshipApplication(nama, umur, ipk, npm)
+        with open('Data/DataMahasiswa.csv', 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow([application.nama, application.umur, application.ipk, application.npm])
+            
         self.applications.append(application)
-        print(f"Pendaftaran untuk {nama} telah ditambahkan.")
+        
 
     def read_applications(self):
         if not self.applications:
@@ -31,33 +34,45 @@ class ScholarshipManager:
             print(f"Name : {app.nama}")
             print(f"Age  : {app.umur}")
             print(f"ipk  : {app.ipk:.2f}")
+            print(f"NPM  : {app.npm}")
             print("-"*40)
         print("-" * 40)
 
-    def update_application(self, nama, new_nama=None, new_umur=None, new_ipk=None):
+    def csvUpdate(self):
+        with open('Data/DataMahasiswa.csv', 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['nama','umur','ipk','npm'])
+            for app in self.applications:
+                writer.writerow([app.nama, app.umur, app.ipk, app.npm])
+                    
+    def update_application(self, npm, new_nama=None, new_umur=None, new_ipk=None, new_npm=None):
         found = False
         for app in self.applications:
-            if app.nama == nama:
+            if app.npm == npm:
                 if new_nama:
-                    if any(a.nama == new_nama for a in self.applications):
-                        print(f"Pendaftaran untuk {new_nama} sudah ada.")
-                        return
                     app.nama = new_nama
                 if new_umur:
                     app.umur = new_umur
                 if new_ipk:
                     app.ipk = new_ipk
+                if new_npm:
+                    if new_npm == app.npm:
+                        print("NPM tidak diperbaharui.")
+                    else:
+                        app.npm = new_npm
                 found = True
-                print(f"Pendaftaran untuk {nama} telah diperbaharui.")
+                self.csvUpdate()
+                print(f"Pendaftaran untuk {npm} telah diperbaharui.")
                 break
         if not found:
-            print(f"Tidak ada pendaftaran untuk {nama}.")
+            print(f"Tidak ada pendaftaran untuk {npm}.")
 
     def delete_application(self, nama):
         initial_len = len(self.applications)
         self.applications = [app for app in self.applications if app.nama != nama]
         if len(self.applications) < initial_len:
             print(f"Pendaftaran atas nama {nama} dihapus.")
+            self.csvUpdate()
         else:
             print(f"Tidak ada pendaftaran atas nama {nama}.")
 
@@ -73,9 +88,27 @@ class ScholarshipManager:
         self.applications.sort(key=lambda x: x.ipk, reverse=True)
         print("Pendaftaran telah diurutkan berdasarkan IPK")
 
+    def sort_appplications_by_npm(self):
+        self.applications.sort(key=lambda x: x.npm)
+        print("Pendaftaran telah diurutkan berdasarkan NPM")
+    
+    def sort_appplications_by_age(self):
+        self.applications.sort(key=lambda x: x.umur)
+        
+    def sort_appplications_by_name(self):
+        self.applications.sort(key=lambda x: x.nama)
+        
+    def laodData(self):
+        with open('./Data/DataMahasiswa.csv','r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            data = list(reader)
+            for row in data:
+                application = ScholarshipApplication(row['nama'], int(row['umur']), float(row['ipk']), int(row['npm']))
+                self.applications.append(application)
+
 def main():
     manager = ScholarshipManager()
-    
+    manager.laodData()
     while True:
         print("__        _______ _     ____ ___  __  __ _____")
         print("\\ \\      / / ____| |   / ___/ _ \\|  \\/  | ____|")
@@ -104,7 +137,7 @@ def main():
         print("3. Update Data Pendaftar")
         print("4. Hapus Data Pendaftar")
         print("5. Cari Pendaftar")
-        print("6. Urutkan berdasarkan IPK")
+        print("6. Urutkan Pendaftar")
         print("7. Exit")
         choice = input("Pilihan anda: ")
 
@@ -129,11 +162,12 @@ def main():
         elif choice == '2':
             manager.read_applications()
         elif choice == '3':
-            name = input("Nama Pendaftar: ")
+            npm = int(input("npm Pendaftar: "))
             new_nama = input("Nama Baru (kosongkan jika tidak ada yang baru): ")
             new_umur = input("Umur Baru (kosongkan jika tidak ada yang baru): ")
             new_ipk  = input("IPK Baru  (kosongkan jika tidak ada yang baru): ")
-            manager.update_application(name, new_nama or None, int(new_umur) if new_umur else None, float(new_ipk) if new_ipk else None)
+            new_npm = input("NPM Baru (kosongkan jika tidak ada yang baru): ")
+            manager.update_application(npm, new_nama or None, int(new_umur) if new_umur else None, float(new_ipk) if new_ipk else None, int(new_npm) if new_npm else None)
         elif choice == '4':
             nama = input("Nama Pendaftar yang ingin dihapus: ")
             manager.delete_application(nama)
@@ -141,7 +175,18 @@ def main():
             nama = input("Nama Pendaftar yang ingin dicari: ")
             manager.search_application(nama)
         elif choice == '6':
-            manager.sort_applications_by_ipk()
+            print('Berdasarkan Apa anda ingin mengurutkan?')
+            print('1. Nama')
+            print('2. Umur')
+            print('3. IPK')
+            print('4. NPM')
+            print('5. Exit')
+            choice = int(input("Pilihan anda: "))
+            method = [manager.sort_appplications_by_name, manager.sort_appplications_by_age, manager.sort_applications_by_ipk, manager.sort_appplications_by_npm]
+            if choice < 5 and choice > 0:
+                method[choice - 1]()
+            elif choice == 5:
+                break
         elif choice == '7':
             print(" _____ _   _    _    _   _ _  __ __   _____  _   _ ")
             print("|_   _| | | |  / \\  | \\ | | |/ / \\ \\ / / _ \\| | | |")
@@ -151,6 +196,4 @@ def main():
             break
         else:
             print("Pilihan Invalid, tolong coba lagi.")
-
-if __name__ == "__main__":
-    main()
+main()
