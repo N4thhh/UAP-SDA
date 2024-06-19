@@ -15,7 +15,7 @@ class ScholarshipManager:
 
     def create_application(self, nama, umur, ipk, npm):
         application = ScholarshipApplication(nama, umur, ipk, npm)
-        with open('Data/DataMahasiswa.csv', 'a', newline='') as csvfile:
+        with open('./Data/DataMahasiswa.csv', 'a', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow([application.nama, application.umur, application.ipk, application.npm])
             
@@ -39,7 +39,7 @@ class ScholarshipManager:
         print("-" * 40)
 
     def csvUpdate(self):
-        with open('Data/DataMahasiswa.csv', 'w', newline='') as csvfile:
+        with open('./Data/DataMahasiswa.csv', 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['nama','umur','ipk','npm'])
             for app in self.applications:
