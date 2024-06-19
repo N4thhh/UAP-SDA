@@ -86,7 +86,7 @@ class ScholarshipApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        label = tk.Label(self.root, text="Anda ingin mendaftar?", font=("Helvetica", 16))
+        label = tk.Label(self.root, text="Apakah anda ingin mendaftar?", font=("Helvetica", 16))
         label.pack(pady=20)
 
         btn_apply = tk.Button(self.root, text="Ya", width=self.button_width, command=self.show_main_menu)
@@ -102,7 +102,7 @@ class ScholarshipApp:
         btn_apply = tk.Button(self.root, text="Daftar", width=self.button_width, command=self.show_application_form)
         btn_apply.pack(side=tk.TOP, pady=10)
 
-        btn_list = tk.Button(self.root, text="Daftar Pendaftar", width=self.button_width, command=self.show_applicant_list)
+        btn_list = tk.Button(self.root, text="List Pendaftar", width=self.button_width, command=self.show_applicant_list)
         btn_list.pack(side=tk.TOP, pady=10)
 
         btn_exit = tk.Button(self.root, text="Keluar", width=self.button_width, command=self.root.quit)
@@ -128,7 +128,10 @@ class ScholarshipApp:
         self.entry_gpa.pack(pady=5)
 
         btn_submit = tk.Button(self.root, text="Kirim", width=self.button_width, command=self.submit_application)
-        btn_submit.pack(pady=20 )
+        btn_submit.pack(pady=20)
+
+        btn_back = tk.Button(self.root, text="Kembali", width=self.button_width, command=self.show_main_menu)
+        btn_back.pack(pady=5)
 
     def submit_application(self):
         name = self.entry_name.get()
@@ -213,6 +216,9 @@ class ScholarshipApp:
         btn_submit = tk.Button(self.root, text="Kirim", width=self.button_width, command=self.submit_update)
         btn_submit.pack(pady=20)
 
+        btn_back = tk.Button(self.root, text="Kembali", width=self.button_width, command=self.show_applicant_list)
+        btn_back.pack(pady=5)
+
     def submit_update(self):
         name = self.entry_name.get()
         new_name = self.entry_new_name.get() or None
@@ -234,6 +240,9 @@ class ScholarshipApp:
         btn_submit = tk.Button(self.root, text="Kirim", width=self.button_width, command=self.submit_delete)
         btn_submit.pack(pady=20)
 
+        btn_back = tk.Button(self.root, text="Kembali", width=self.button_width, command=self.show_applicant_list)
+        btn_back.pack(pady=5)
+
     def submit_delete(self):
         name = self.entry_name.get()
         self.manager.delete_application(name)
@@ -250,6 +259,9 @@ class ScholarshipApp:
 
         btn_submit = tk.Button(self.root, text="Kirim", width=self.button_width, command=self.submit_search)
         btn_submit.pack(pady=20)
+
+        btn_back = tk.Button(self.root, text="Kembali", width=self.button_width, command=self.show_applicant_list)
+        btn_back.pack(pady=5)
 
     def submit_search(self):
         name = self.entry_name.get()
