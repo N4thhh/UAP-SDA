@@ -20,12 +20,15 @@ class ScholarshipManager:
 
     def create_application(self, nama, umur, ipk, npm):
         application = ScholarshipApplication(nama, umur, ipk, npm)
-        with open('Data/DataMahasiswa.csv', 'a', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow([application.nama, application.umur, application.ipk, application.npm])
-            
-        self.applications.append(application)
+        if any(app.npm == npm for app in self.applications):
+            messagebox.showerror("Error", f"Pendaftar dengan npm {npm} sudah ada.")
+            return
+        else:
+            with open('Data/DataMahasiswa.csv', 'a', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow([application.nama, application.umur, application.ipk, application.npm])
         
+            self.applications.append(application)
 
     def read_applications(self):
         if not self.applications:
