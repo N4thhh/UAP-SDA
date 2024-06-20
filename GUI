@@ -2,6 +2,8 @@ from tkinter import *
 import tkinter as tk
 from tkinter import messagebox
 import csv
+
+import screeninfo
 # Class untuk aplikasi / daftar
 class ScholarshipApplication:
     def __init__(self, nama, umur, ipk, npm):
@@ -107,6 +109,8 @@ class ScholarshipApp:
         self.manager.laodData()
         self.root = root
         self.root.title("Sistem Informasi Beasiswa")
+        self.xmax = self.root.winfo_screenwidth()
+        self.ymax = self.root.winfo_screenheight() 
         self.root.geometry("600x400")
         self.button_width = 20
         self.entry_width = 40 
@@ -197,34 +201,30 @@ class ScholarshipApp:
         for widget in self.second_window.winfo_children():
             widget.destroy()
             
-        self.back_button = tk.Button(self.second_window, text="Back", state="disabled", command=self.go_back)
-        self.back_button.grid(row=self.names_per_page, column=0)
-
-        self.forward_button = tk.Button(self.second_window, text="Forward", command=self.go_forward)
-        self.forward_button.grid(row=self.names_per_page, column=2)
-
-        self.search_entry = tk.Entry(self.second_window)
-        self.search_entry.grid(row=self.names_per_page, column=1)
-
-        self.search_button = tk.Button(self.second_window, text="Search", command=lambda : self.go_to_page(int(self.search_entry.get())))
-        self.search_button.grid(row=self.names_per_page+1, column=2)
-        
-        close_button = tk.Button(self.second_window, text="Close", command=self.close_second_window)
-        close_button.grid(row=self.names_per_page+2, column=0)
         start_index = self.current_page * self.names_per_page
         end_index = min((self.current_page + 1) * self.names_per_page, len(self.names))
-        row = 0
-        labels = []
-        if len(labels) > 0:
-            for label in labels:
-                label.destroy()
-            labels.clear()
         
         for app in self.applicants[start_index:end_index]:
             label = tk.Label(self.second_window, text=str(app), background="#373535", foreground="white")
-            label.grid(row=row, column=0)
-            labels.append(label)
-            row += 1
+            label.pack(side=tk.TOP)
+        
+        my_frame = tk.Frame(self.second_window)
+        my_frame.pack(side=tk.TOP)
+        
+        self.back_button = tk.Button(my_frame, text="Back", state="disabled", command=self.go_back, width=5)
+        self.back_button.pack(side=tk.LEFT)
+
+        self.search_entry = tk.Entry(my_frame, width=5)
+        self.search_entry.pack(side=tk.LEFT)
+        
+        self.forward_button = tk.Button(my_frame, text="Forward", command=self.go_forward, width=5)
+        self.forward_button.pack(side=tk.LEFT)
+
+        self.search_button = tk.Button(self.second_window, text="Search", command=lambda : self.go_to_page(int(self.search_entry.get())),width=5)
+        self.search_button.pack(side=tk.TOP)
+        
+        close_button = tk.Button(self.second_window, text="Close", command=self.close_second_window, width=5)
+        close_button.pack(side=tk.TOP)
         
         self.update_button_states()
 
@@ -258,24 +258,22 @@ class ScholarshipApp:
         self.applicants = self.manager.read_applications()
         self.second_window = tk.Toplevel(root)
         self.second_window.title("List Mahasiswa")
+        self.second_window.geometry("300x200")
+        self.second_window.iconbitmap('icon.ico')
         self.name_label = tk.Label(self.second_window)
-        self.name_label.grid(row=0, column=0)
-        
+        self.name_label.pack(side=tk.TOP)
         self.update_name_label()
         
-        before_button = tk.Button(self.root, text="Kembali", width=self.button_width, command=self.show_main_menu)
-        before_button.grid(row=0,column=0)
         self.second_window.config(background="#373535")
-        #self.second_window.mainloop()
         
-        btn_update = tk.Button(self.root, text="Perbarui", width=self.button_width, command=self.show_update_form)
-        btn_update.grid(row=1,column=0)
+        btn_update = tk.Button(self.root, text="Perbarui",  command=self.show_update_form,width=34)
+        btn_update.pack(side=tk.TOP)
 
-        btn_delete = tk.Button(self.root, text="Hapus", width=self.button_width, command=self.show_delete_form)
-        btn_delete.grid(row=2,column=0)
+        btn_delete = tk.Button(self.root, text="Hapus",  command=self.show_delete_form,width=34)
+        btn_delete.pack(side=tk.TOP)
 
-        btn_search = tk.Button(self.root, text="Cari", width=self.button_width, command=self.show_search_form)
-        btn_search.grid(row=3,column=0)
+        btn_search = tk.Button(self.root, text="Cari",  command=self.show_search_form,width=34)
+        btn_search.pack(side=tk.TOP)
 
         option = [
             "Urutkan berdasarkan IPK",
@@ -286,13 +284,18 @@ class ScholarshipApp:
         clicked = StringVar()
         clicked.set(option[0])
         
-        drop = OptionMenu(self.root, clicked, *option)
-        drop.grid(row=4,column=0)
-        btn_sort = tk.Button(self.root, text="Urutkan", width=self.button_width, command=lambda : self.sort_applications(clicked.get()))
-        btn_sort.grid(row=4,column=1)
+        frameku = Frame(self.root)
+        frameku.pack(side=tk.TOP)
+        
+        drop = OptionMenu(frameku, clicked, *option)
+        drop.pack(side=tk.LEFT)
+        drop.config(width=20)
+        
+        btn_sort = tk.Button(frameku, text="Urutkan",  command=lambda : self.sort_applications(clicked.get()),width=10)
+        btn_sort.pack(side=tk.LEFT)
 
-        btn_back = tk.Button(self.root, text="Kembali", width=self.button_width, command=self.show_main_menu)
-        btn_back.grid(row=5,column=0)
+        btn_back = tk.Button(self.root, text="Kembali",  command=self.show_main_menu,width=34)
+        btn_back.pack(side=tk.TOP)
 
     def show_update_form(self):
         for widget in self.root.winfo_children():
@@ -362,20 +365,19 @@ class ScholarshipApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        label_name = tk.Label(self.root, text="Nama untuk Dicari")
+        label_name = tk.Label(self.root, text="NPM untuk Dicari")
         label_name.pack(pady=5)
         self.entry_name = tk.Entry(self.root, width=self.entry_width)
         self.entry_name.pack(pady=5)
 
-        btn_submit = tk.Button(self.root, text="Kirim", width=self.button_width, command=self.submit_search)
+        btn_submit = tk.Button(self.root, text="Kirim", width=self.button_width, command=lambda : self.submit_search(int(self.entry_name.get())))
         btn_submit.pack(pady=20)
 
         btn_back = tk.Button(self.root, text="Kembali", width=self.button_width, command=self.show_applicant_list)
         btn_back.pack(pady=5)
 
-    def submit_search(self):
-        name = self.entry_name.get()
-        self.manager.search_application(name)
+    def submit_search(self, npm):
+        self.manager.search_application(npm)
         self.show_applicant_list()
 
     def sort_applications(self, option):
