@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import messagebox
 import csv
 
-import screeninfo
 # Class untuk aplikasi / daftar
 class ScholarshipApplication:
     def __init__(self, nama, umur, ipk, npm):
