@@ -1,31 +1,30 @@
+from tkinter import *
 import tkinter as tk
 from tkinter import messagebox
-
+import csv
+# Class untuk aplikasi / daftar
 class ScholarshipApplication:
-    def __init__(self, nama, umur, ipk):
+    def __init__(self, nama, umur, ipk, npm):
         self.nama = nama
         self.umur = umur
         self.ipk = ipk
-
+        self.npm = npm
     def __repr__(self):
-        return f"Nama: {self.nama}, Umur: {self.umur}, IPK: {self.ipk}"
+        return f"Nama: {self.nama}, Umur: {self.umur}, IPK: {self.ipk}, NPM: {self.npm}"
 
+# Class untuk manajemen data pendaftaran
 class ScholarshipManager:
     def __init__(self):
         self.applications = []
 
-    def create_application(self, nama, umur, ipk):
-        if not nama:
-            messagebox.showerror("Error", "Kolom Nama harus diisi.")
-            return
-
-        if any(app.nama == nama for app in self.applications):
-            messagebox.showerror("Error", f"Pendaftar dengan nama {nama} sudah ada.")
-            return
-
-        application = ScholarshipApplication(nama, umur, ipk)
+    def create_application(self, nama, umur, ipk, npm):
+        application = ScholarshipApplication(nama, umur, ipk, npm)
+        with open('Data/DataMahasiswa.csv', 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow([application.nama, application.umur, application.ipk, application.npm])
+            
         self.applications.append(application)
-        messagebox.showinfo("Success", f"Pendaftaran untuk {nama} telah ditambahkan.")
+        
 
     def read_applications(self):
         if not self.applications:
@@ -34,66 +33,84 @@ class ScholarshipManager:
 
         return self.applications
 
-    def update_application(self, nama, new_nama=None, new_umur=None, new_ipk=None):
+    def csvUpdate(self):
+        with open('Data/DataMahasiswa.csv', 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['nama','umur','ipk','npm'])
+            for app in self.applications:
+                writer.writerow([app.nama, app.umur, app.ipk, app.npm])
+                    
+    def update_application(self, npm, new_nama=None, new_umur=None, new_ipk=None, new_npm=None):
         found = False
         for app in self.applications:
-            if app.nama == nama:
-                if new_nama:
-                    if any(a.nama == new_nama for a in self.applications):
-                        messagebox.showerror("Error", f"Pendaftaran untuk {new_nama} sudah ada.")
+            if app.npm == npm:
+                if new_npm:
+                    if any(a.npm == new_npm for a in self.applications):
+                        messagebox.showerror("Error", f"Pendaftaran untuk {new_npm} sudah ada.")
                         return
-                    app.nama = new_nama
+                    app.npm = new_npm
+                if new_nama:
+                    app.nama = new_nama    
                 if new_umur:
                     app.umur = new_umur
                 if new_ipk:
                     app.ipk = new_ipk
                 found = True
-                messagebox.showinfo("Success", f"Pendaftaran untuk {nama} telah diperbaharui.")
+                messagebox.showinfo("Success", f"Pendaftaran untuk {npm} telah diperbaharui.")
                 break
         if not found:
-            messagebox.showerror("Error", f"Tidak ada pendaftaran untuk {nama}.")
-
-    def delete_application(self, nama):
+            messagebox.showerror("Error", f"Tidak ada pendaftaran untuk {npm}.")
+        self.csvUpdate()
+        
+    def delete_application(self, npm):
         initial_len = len(self.applications)
-        self.applications = [app for app in self.applications if app.nama != nama]
+        self.applications = [app for app in self.applications if app.npm != npm]
         if len(self.applications) < initial_len:
-            messagebox.showinfo("Success", f"Pendaftaran atas nama {nama} dihapus.")
+            messagebox.showinfo("Success", f"Pendaftaran atas npm {npm} dihapus.")
         else:
-            messagebox.showerror("Error", f"Tidak ada pendaftaran atas nama {nama}.")
+            messagebox.showerror("Error", f"Tidak ada pendaftaran atas npm {npm}.")
+        self.csvUpdate()
 
-    def search_application(self, nama):
+    def search_application(self, npm):
         for app in self.applications:
-            if app.nama == nama:
+            if app.npm == npm:
                 messagebox.showinfo("Nama ditemukan", str(app))
                 return
-        messagebox.showerror("Error", f"Nama {nama} tidak ditemukan di database.")
+        messagebox.showerror("Error", f"Nama {npm} tidak ditemukan di database.")
 
     def sort_applications_by_ipk(self):
         self.applications.sort(key=lambda x: x.ipk, reverse=True)
-        messagebox.showinfo("Success", "Pendaftaran telah diurutkan berdasarkan IPK")
+        print("Pendaftaran telah diurutkan berdasarkan IPK")
 
+    def sort_applications_by_npm(self):
+        self.applications.sort(key=lambda x: x.npm)
+        print("Pendaftaran telah diurutkan berdasarkan NPM")
+    
+    def sort_applications_by_age(self):
+        self.applications.sort(key=lambda x: x.umur)
+        
+    def sort_applications_by_name(self):
+        self.applications.sort(key=lambda x: x.nama)
+        
+    def laodData(self):
+        with open('./Data/DataMahasiswa.csv','r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            data = list(reader)
+            for row in data:
+                application = ScholarshipApplication(row['nama'], int(row['umur']), float(row['ipk']), int(row['npm']))
+                self.applications.append(application)
+
+#Class untuk tkinter atau GUI nya
 class ScholarshipApp:
     def __init__(self, root):
         self.manager = ScholarshipManager()
+        self.manager.laodData()
         self.root = root
-        self.root.title("Sistem Pendaftaran Beasiswa")
-        self.root.geometry("400x300")
+        self.root.title("Sistem Informasi Beasiswa")
+        self.root.geometry("600x400")
         self.button_width = 20
         self.entry_width = 40 
-        self.show_initial_screen()
-
-    def show_initial_screen(self):
-        for widget in self.root.winfo_children():
-            widget.destroy()
-
-        label = tk.Label(self.root, text="Apakah anda ingin mendaftar?", font=("Helvetica", 16))
-        label.pack(pady=20)
-
-        btn_apply = tk.Button(self.root, text="Ya", width=self.button_width, command=self.show_main_menu)
-        btn_apply.pack(side=tk.LEFT, padx=20, pady=20)
-
-        btn_exit = tk.Button(self.root, text="Tidak", width=self.button_width, command=self.root.quit)
-        btn_exit.pack(side=tk.RIGHT, padx=20, pady=20)
+        self.show_main_menu()
 
     def show_main_menu(self):
         for widget in self.root.winfo_children():
@@ -116,17 +133,22 @@ class ScholarshipApp:
         label_name.pack(pady=5)
         self.entry_name = tk.Entry(self.root, width=self.entry_width)
         self.entry_name.pack(pady=5)
-
+        
         label_age = tk.Label(self.root, text="Umur")
         label_age.pack(pady=5)
         self.entry_age = tk.Entry(self.root, width=self.entry_width)
         self.entry_age.pack(pady=5)
 
-        label_gpa = tk.Label(self.root, text="IPK")
-        label_gpa.pack(pady=5)
-        self.entry_gpa = tk.Entry(self.root, width=self.entry_width)
-        self.entry_gpa.pack(pady=5)
+        label_ipk = tk.Label(self.root, text="IPK")
+        label_ipk.pack(pady=5)
+        self.entry_ipk = tk.Entry(self.root, width=self.entry_width)
+        self.entry_ipk.pack(pady=5)
 
+        label_npm = tk.Label(self.root, text="NPM")
+        label_npm.pack(pady=5)
+        self.entry_npm = tk.Entry(self.root, width=self.entry_width)
+        self.entry_npm.pack(pady=5)
+        
         btn_submit = tk.Button(self.root, text="Kirim", width=self.button_width, command=self.submit_application)
         btn_submit.pack(pady=20)
 
@@ -138,63 +160,146 @@ class ScholarshipApp:
         if not name:
             messagebox.showerror("Error", "Kolom Nama harus diisi.")
             return
-
         try:
             age = int(self.entry_age.get())
         except ValueError:
             messagebox.showerror("Error", "Umur harus berupa angka.")
             return
         try:
-            gpa = float(self.entry_gpa.get())
+            ipk = float(self.entry_ipk.get())
         except ValueError:
             messagebox.showerror("Error", "IPK harus berupa angka.")
             return
-
+        npm = int(self.entry_npm.get())
+        if not npm :
+            messagebox.showerror("Error", "Kolom NPM harus diisi.")
+            return
+        
         if age < 18 or age > 20:
             messagebox.showerror("Error", "Hanya menerima pendaftar berumur 18-20 tahun.")
             return
 
-        if gpa < 3.0:
+        if ipk < 3.0:
             messagebox.showerror("Error", "Minimal IPK 3.00")
             return
 
-        if gpa > 4.0:
+        if ipk > 4.0:
             messagebox.showerror("Error", "IPK Invalid!")
             return
 
-        self.manager.create_application(name, age, gpa)
+        self.manager.create_application(name, age, ipk, npm)
         self.show_main_menu()
+
+    def close_second_window(self):
+        self.second_window.destroy()
+    
+    def update_name_label(self):
+        for widget in self.second_window.winfo_children():
+            widget.destroy()
+            
+        self.back_button = tk.Button(self.second_window, text="Back", state="disabled", command=self.go_back)
+        self.back_button.grid(row=self.names_per_page, column=0)
+
+        self.forward_button = tk.Button(self.second_window, text="Forward", command=self.go_forward)
+        self.forward_button.grid(row=self.names_per_page, column=2)
+
+        self.search_entry = tk.Entry(self.second_window)
+        self.search_entry.grid(row=self.names_per_page, column=1)
+
+        self.search_button = tk.Button(self.second_window, text="Search", command=lambda : self.go_to_page(int(self.search_entry.get())))
+        self.search_button.grid(row=self.names_per_page+1, column=2)
+        
+        close_button = tk.Button(self.second_window, text="Close", command=self.close_second_window)
+        close_button.grid(row=self.names_per_page+2, column=0)
+        start_index = self.current_page * self.names_per_page
+        end_index = min((self.current_page + 1) * self.names_per_page, len(self.names))
+        row = 0
+        labels = []
+        if len(labels) > 0:
+            for label in labels:
+                label.destroy()
+            labels.clear()
+        
+        for app in self.applicants[start_index:end_index]:
+            label = tk.Label(self.second_window, text=str(app), background="#373535", foreground="white")
+            label.grid(row=row, column=0)
+            labels.append(label)
+            row += 1
+        
+        self.update_button_states()
+
+    def update_button_states(self):
+        self.back_button.config(state="disabled" if self.current_page == 0 else "normal")
+        self.forward_button.config(state="normal" if len(self.names) > (self.current_page + 1) * self.names_per_page else "disabled")
+
+    def go_back(self):
+        self.current_page -= 1
+        self.update_name_label()
+
+    def go_forward(self):
+        self.current_page += 1
+        self.update_name_label()
+        
+    def go_to_page(self, page):
+        self.current_page = page
+        if self.current_page * self.names_per_page <= len(self.names):
+            self.update_name_label()
+        else :
+            messagebox.showerror("Error", "Halaman tidak ditemukan.")
+            return
 
     def show_applicant_list(self):
         for widget in self.root.winfo_children():
             widget.destroy()
-
-        applicants = self.manager.read_applications()
-        if applicants:
-            for app in applicants:
-                tk.Label(self.root, text=str(app)).pack()
-
+        self.names = self.manager.read_applications()
+        self.current_page = 0
+        self.names_per_page = 5
+        
+        self.applicants = self.manager.read_applications()
+        self.second_window = tk.Toplevel(root)
+        self.second_window.title("List Mahasiswa")
+        self.name_label = tk.Label(self.second_window)
+        self.name_label.grid(row=0, column=0)
+        
+        self.update_name_label()
+        
+        before_button = tk.Button(self.root, text="Kembali", width=self.button_width, command=self.show_main_menu)
+        before_button.grid(row=0,column=0)
+        self.second_window.config(background="#373535")
+        #self.second_window.mainloop()
+        
         btn_update = tk.Button(self.root, text="Perbarui", width=self.button_width, command=self.show_update_form)
-        btn_update.pack(side=tk.TOP, pady=5)
+        btn_update.grid(row=1,column=0)
 
         btn_delete = tk.Button(self.root, text="Hapus", width=self.button_width, command=self.show_delete_form)
-        btn_delete.pack(side=tk.TOP, pady=5)
+        btn_delete.grid(row=2,column=0)
 
         btn_search = tk.Button(self.root, text="Cari", width=self.button_width, command=self.show_search_form)
-        btn_search.pack(side=tk.TOP, pady=5)
+        btn_search.grid(row=3,column=0)
 
-        btn_sort = tk.Button(self.root, text="Urutkan berdasarkan IPK", width=self.button_width, command=self.sort_applications)
-        btn_sort.pack(side=tk.TOP, pady=5)
+        option = [
+            "Urutkan berdasarkan IPK",
+            "Urutkan berdasarkan Nama",
+            "Urutkan berdasarkan Umur",
+            "Urutkan berdasarkan NPM",
+        ]
+        clicked = StringVar()
+        clicked.set(option[0])
+        
+        drop = OptionMenu(self.root, clicked, *option)
+        drop.grid(row=4,column=0)
+        btn_sort = tk.Button(self.root, text="Urutkan", width=self.button_width, command=lambda : self.sort_applications(clicked.get()))
+        btn_sort.grid(row=4,column=1)
 
         btn_back = tk.Button(self.root, text="Kembali", width=self.button_width, command=self.show_main_menu)
-        btn_back.pack(side=tk.TOP, pady=20)
+        btn_back.grid(row=5,column=0)
 
     def show_update_form(self):
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        label_name = tk.Label(self.root, text="Nama untuk Diperbarui")
-        label_name.pack(pady=5)
+        label_npm = tk.Label(self.root, text="NPM untuk Diperbarui")
+        label_npm.pack(pady=5)
         self.entry_name = tk.Entry(self.root, width=self.entry_width)
         self.entry_name.pack(pady=5)
 
@@ -208,10 +313,15 @@ class ScholarshipApp:
         self.entry_new_age = tk.Entry(self.root, width=self.entry_width)
         self.entry_new_age.pack(pady=5)
 
-        label_new_gpa = tk.Label(self.root, text="IPK Baru (opsional)")
-        label_new_gpa.pack(pady=5)
-        self.entry_new_gpa = tk.Entry(self.root, width=self.entry_width)
-        self.entry_new_gpa.pack(pady=5)
+        label_new_ipk = tk.Label(self.root, text="IPK Baru (opsional)")
+        label_new_ipk.pack(pady=5)
+        self.entry_new_ipk = tk.Entry(self.root, width=self.entry_width)
+        self.entry_new_ipk.pack(pady=5)
+        
+        label_new_npm = tk.Label(self.root, text="NPM Baru (opsional)")
+        label_new_npm.pack(pady=5)
+        self.entry_new_npm = tk.Entry(self.root, width=self.entry_width)
+        self.entry_new_npm.pack(pady=5)
 
         btn_submit = tk.Button(self.root, text="Kirim", width=self.button_width, command=self.submit_update)
         btn_submit.pack(pady=20)
@@ -220,22 +330,22 @@ class ScholarshipApp:
         btn_back.pack(pady=5)
 
     def submit_update(self):
-        name = self.entry_name.get()
+        npm = int(self.entry_name.get())
         new_name = self.entry_new_name.get() or None
         new_age = int(self.entry_new_age.get()) if self.entry_new_age.get() else None
-        new_gpa = float(self.entry_new_gpa.get()) if self.entry_new_gpa.get() else None
-
-        self.manager.update_application(name, new_name, new_age, new_gpa)
+        new_ipk = float(self.entry_new_ipk.get()) if self.entry_new_ipk.get() else None
+        new_npm = int(self.entry_new_npm.get()) if self.entry_new_npm.get() else None
+        self.manager.update_application(npm, new_name, new_age, new_ipk, new_npm)
         self.show_applicant_list()
 
     def show_delete_form(self):
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        label_name = tk.Label(self.root, text="Nama untuk Dihapus")
-        label_name.pack(pady=5)
-        self.entry_name = tk.Entry(self.root, width=self.entry_width)
-        self.entry_name.pack(pady=5)
+        label_npm = tk.Label(self.root, text="NPM untuk Dihapus")
+        label_npm.pack(pady=5)
+        self.entry_npm = tk.Entry(self.root, width=self.entry_width)
+        self.entry_npm.pack(pady=5)
 
         btn_submit = tk.Button(self.root, text="Kirim", width=self.button_width, command=self.submit_delete)
         btn_submit.pack(pady=20)
@@ -244,8 +354,8 @@ class ScholarshipApp:
         btn_back.pack(pady=5)
 
     def submit_delete(self):
-        name = self.entry_name.get()
-        self.manager.delete_application(name)
+        npm = int(self.entry_npm.get())
+        self.manager.delete_application(npm)
         self.show_applicant_list()
 
     def show_search_form(self):
@@ -268,11 +378,24 @@ class ScholarshipApp:
         self.manager.search_application(name)
         self.show_applicant_list()
 
-    def sort_applications(self):
-        self.manager.sort_applications_by_ipk()
+    def sort_applications(self, option):
+        if option == "Urutkan berdasarkan IPK":
+            self.manager.sort_applications_by_ipk()
+        if option == "Urutkan berdasarkan Nama":
+            self.manager.sort_applications_by_name()
+        if option == "Urutkan berdasarkan Umur":
+            self.manager.sort_applications_by_age()
+        if option == "Urutkan berdasarkan NPM":
+            self.manager.sort_applications_by_npm()
         self.show_applicant_list()
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = ScholarshipApp(root)
-    root.mainloop()
+
+root = tk.Tk()
+root.title("Data Beasiswa")
+root.iconbitmap('icon.ico')
+root.config(background="#373535")
+root.columnconfigure(0, weight=1)
+#root.rowconfigure(0, weight=1)
+app = ScholarshipApp(root)
+
+root.mainloop()
